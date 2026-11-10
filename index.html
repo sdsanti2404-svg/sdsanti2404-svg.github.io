@@ -1,0 +1,565 @@
+<title>MetaQuest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: pantalla de inicio (nivel, modos, dominio por tema) y una pantalla de juego centrada de una columna */
+:root{
+  --bg:#edf2f4; --surface:#ffffff; --sunk:#e2e9ec; --ink:#0f1b24; --muted:#56666f; --line:#cfd9de;
+  --accent:#2c4fd8; --pop:#f2552c; --gold:#e3a400; --good:#178a52; --bad:#d23b35;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1318; --surface:#151f27; --sunk:#1c2832; --ink:#e6edf1; --muted:#93a3ad; --line:#2a3944;
+  --accent:#7e98ff; --pop:#ff7a55; --gold:#f4c13d; --good:#46cc87; --bad:#ff6b63; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0c1318; --surface:#151f27; --sunk:#1c2832; --ink:#e6edf1; --muted:#93a3ad; --line:#2a3944;
+  --accent:#7e98ff; --pop:#ff7a55; --gold:#f4c13d; --good:#46cc87; --bad:#ff6b63; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:880px;margin:0 auto;padding-block:28px 56px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Cabecera */
+.hud{display:grid;grid-template-columns:auto 1fr auto;gap:14px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.lvl{width:56px;height:56px;border-radius:16px;background:var(--accent);color:var(--surface);display:grid;place-items:center;font:800 26px var(--f-display)}
+.lvlname{font:600 18px var(--f-display);margin:0}
+.xpbar{height:10px;background:var(--sunk);border-radius:99px;overflow:hidden;margin-top:6px}
+.xpbar i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .6s}
+.xptext{font:500 12px var(--f-mono);color:var(--muted);margin-top:4px}
+.best{text-align:right;font:500 12px var(--f-mono);color:var(--muted)}
+.best b{display:block;font:800 22px var(--f-display);color:var(--pop)}
+
+h1{font:800 clamp(34px,7vw,56px)/1 var(--f-display);margin:30px 0 6px;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{margin:0 0 22px;color:var(--muted);max-width:60ch}
+
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}
+.mode{display:grid;gap:8px;align-content:start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;transition:transform .15s,border-color .15s}
+.mode:hover{transform:translateY(-3px);border-color:var(--accent)}
+.mode svg{width:40px;height:40px}
+.mode h3{font:600 19px var(--f-display);margin:0}
+.mode p{margin:0;color:var(--muted);font-size:13.5px}
+.mode .go{font:600 13px var(--f-mono);color:var(--accent)}
+
+.sec{margin-top:30px}
+.sec h2{font:600 20px var(--f-display);margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mastery{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:8px 18px;margin-top:4px}
+.mrow{display:grid;grid-template-columns:120px 1fr 54px;gap:10px;align-items:center;font-size:13.5px}
+.mbar{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.mbar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.mrow span:last-child{font:500 12px var(--f-mono);color:var(--muted);text-align:right}
+.reset{margin-top:14px;background:none;border:0;color:var(--muted);font-size:12.5px;text-decoration:underline;padding:0}
+
+/* Juego */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.back{background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:13.5px}
+.stats{display:flex;gap:14px;font:600 14px var(--f-mono);align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.lives{color:var(--bad);letter-spacing:2px}
+.combo{color:var(--pop)}
+.timer{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden;margin-bottom:18px}
+.timer i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.timer.low i{background:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px}
+.tag{display:inline-block;font:600 11.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.q{font:600 clamp(19px,3.4vw,24px)/1.25 var(--f-display);margin:0 0 18px;text-wrap:balance}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;text-align:left;background:var(--bg);border:2px solid transparent;border-radius:14px;padding:12px 14px;font-size:15px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt kbd{font:600 12px var(--f-mono);color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:7px;display:grid;place-items:center;height:26px}
+.opt.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--sunk);font-size:14px}
+.explain b{font-family:var(--f-display)}
+.next{margin-top:14px;width:100%;background:var(--accent);color:var(--surface);border:0;border-radius:14px;padding:13px;font:600 16px var(--f-body)}
+.float{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font:800 34px var(--f-display);color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
+@keyframes up{from{opacity:1;transform:translate(-50%,-30%)}to{opacity:0;transform:translate(-50%,-140%)}}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+/* Comida o ayuno */
+.swcard{min-height:150px;display:grid;place-items:center;text-align:center;font:600 clamp(20px,4vw,28px)/1.2 var(--f-display);padding:28px 18px;text-wrap:balance;transition:transform .18s,opacity .18s}
+.swcard.l{transform:translateX(-40px) rotate(-6deg);opacity:0}
+.swcard.r{transform:translateX(40px) rotate(6deg);opacity:0}
+.bins{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.bin{border:0;border-radius:16px;padding:18px 10px;font:600 18px var(--f-display);color:var(--surface)}
+.bin small{display:block;font:500 12px var(--f-mono);opacity:.85;margin-top:2px}
+.bin.fed{background:var(--good)} .bin.fast{background:var(--accent)}
+.flash{margin-top:12px;min-height:22px;text-align:center;font-size:14px}
+
+/* Ordena */
+.slots{display:flex;flex-wrap:wrap;gap:6px;min-height:46px;padding:10px;border-radius:14px;background:var(--sunk);margin-bottom:14px;counter-reset:n}
+.slot{counter-increment:n;background:var(--surface);border:1px solid var(--good);border-radius:10px;padding:6px 10px;font-size:13.5px;display:flex;gap:6px;align-items:center}
+.slot::before{content:counter(n);font:600 11px var(--f-mono);color:var(--good)}
+.pool{display:flex;flex-wrap:wrap;gap:8px}
+.tile{background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:9px 13px;font-size:14.5px}
+.tile:hover{border-color:var(--accent)}
+.hint{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+
+/* Conecta */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.col{display:grid;gap:8px;align-content:start}
+.pair{background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:11px 12px;font-size:14px;text-align:left;min-height:48px}
+.pair.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.pair.done{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface));opacity:.7;cursor:default}
+
+/* Resultado */
+.result{text-align:center}
+.big{font:800 64px/1 var(--f-display);color:var(--accent);margin:8px 0}
+.rgrid{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;font:500 13px var(--f-mono);color:var(--muted);margin:10px 0 18px}
+.rgrid b{display:block;font:800 22px var(--f-display);color:var(--ink)}
+.missed{text-align:left;margin-top:18px;display:grid;gap:8px}
+.miss{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.miss b{display:block;font-weight:600;margin-bottom:2px}
+.miss .ans{color:var(--good);font-weight:600}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.ghost{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px;font:600 15px var(--f-body)}
+.lvup{display:inline-block;margin-top:6px;background:var(--gold);color:#1a1300;font:700 13px var(--f-mono);padding:5px 12px;border-radius:99px}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:20}
+@media (max-width:480px){.mrow{grid-template-columns:100px 1fr 48px}.hud{grid-template-columns:auto 1fr}.best{grid-column:1/-1;text-align:left;display:flex;gap:8px;align-items:baseline}.best b{display:inline}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="wrap">
+  <div class="hud" aria-live="polite">
+    <div class="lvl" id="lvl">1</div>
+    <div><p class="lvlname" id="lvlname">Glucosa suelta</p><div class="xpbar"><i id="xpfill" style="width:0%"></i></div><div class="xptext" id="xptext">0 / 150 XP</div></div>
+    <div class="best">Mejor racha<b id="best">0</b></div>
+  </div>
+
+  <main id="home">
+    <h1>Meta<span>Quest</span></h1>
+    <p class="sub">Cuatro juegos cortos con todo lo de tus 8 presentaciones de bioquímica. Gana XP, sube de nivel y mira qué temas dominas.</p>
+    <div class="modes">
+      <button class="mode" data-mode="quiz" type="button">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--accent)" stroke-width="3"/><path d="M20 9v11l7 5" stroke="var(--pop)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+        <h3>Contrarreloj</h3><p>10 preguntas, 20 s cada una y 3 vidas. Las rachas multiplican tus puntos.</p><span class="go">Jugar →</span></button>
+      <button class="mode" data-mode="sort" type="button">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="10" width="15" height="20" rx="4" fill="var(--good)"/><rect x="22" y="10" width="15" height="20" rx="4" fill="var(--accent)"/></svg>
+        <h3>¿Comida o ayuno?</h3><p>Clasifica cada enzima, hormona o vía según el estado en que está activa. Tienes 60 s.</p><span class="go">Jugar →</span></button>
+      <button class="mode" data-mode="order" type="button">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="8" cy="20" r="5" fill="var(--gold)"/><circle cx="20" cy="20" r="5" fill="var(--gold)" opacity=".7"/><circle cx="32" cy="20" r="5" fill="var(--gold)" opacity=".45"/><path d="M13 20h2M25 20h2" stroke="var(--ink)" stroke-width="2"/></svg>
+        <h3>Ordena la vía</h3><p>Toca los pasos de una vía en el orden correcto, de la glucólisis a la vitamina D.</p><span class="go">Jugar →</span></button>
+      <button class="mode" data-mode="match" type="button">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="6" width="14" height="10" rx="3" fill="var(--pop)"/><rect x="24" y="24" width="14" height="10" rx="3" fill="var(--pop)"/><path d="M16 11c8 0 0 18 8 18" stroke="var(--ink)" stroke-width="2" fill="none"/></svg>
+        <h3>Conecta</h3><p>Une enfermedades, inhibidores, coenzimas y transportadores con su pareja.</p><span class="go">Jugar →</span></button>
+    </div>
+
+    <div class="sec">
+      <h2>Tema del Contrarreloj</h2>
+      <div class="chips" id="topics"></div>
+    </div>
+    <div class="sec">
+      <h2>Tu dominio por tema</h2>
+      <div class="mastery" id="mastery"></div>
+      <button class="reset" id="reset" type="button">Borrar mi progreso</button>
+    </div>
+  </main>
+
+  <section id="game" hidden></section>
+</div>
+
+<script>
+(function(){
+var T={sen:'Señales',glu:'Glucólisis',pdh:'Piruvato DH',kre:'Krebs',res:'Respiración',gng:'Gluconeogénesis',gcg:'Glucógeno',pen:'Pentosas'};
+// [tema, pregunta, [correcta, incorrectas...], explicación]
+var Q=[
+['sen','¿Cuál es el segundo mensajero del glucagón?',['AMPc','IP3','GMPc','Ca²⁺'],'Gs activa la adenilato ciclasa: ATP → AMPc + PPi.'],
+['sen','¿Por qué el receptor de insulina es "tres en uno"?',['Es receptor, transductor y efector a la vez','Une tres hormonas distintas','Tiene tres subunidades α','Usa tres segundos mensajeros'],'Su actividad tirosina cinasa está en el mismo receptor; no hay segundo mensajero clásico.'],
+['sen','¿Cuántos dominios transmembrana tiene el receptor del glucagón?',['7','4','12','2'],'Es un receptor 7TM: N-terminal extracelular y C-terminal intracelular.'],
+['sen','La proteína G está inactiva cuando su subunidad α tiene unido…',['GDP','GTP','AMPc','ATP'],'Al ocuparse el receptor, α suelta GDP y toma GTP: se activa.'],
+['sen','¿Qué enzima degrada el AMPc a 5′-AMP?',['Fosfodiesterasa','Adenilato ciclasa','PKA','Fosfatasa'],'La fosfodiesterasa (PDE) apaga la señal. El Viagra inhibe una PDE.'],
+['sen','¿Qué se libera cuando el AMPc se une a la PKA?',['Las subunidades catalíticas (C)','Las subunidades reguladoras al núcleo','GTP','Calcio'],'PKA = 2 R + 2 C. El AMPc se une a R y libera las C activas.'],
+['sen','La proteína Gq activa…',['Fosfolipasa C (IP3 y DAG)','Adenilato ciclasa','GMPc fosfodiesterasa','Un canal de K⁺'],'IP3 libera Ca²⁺ del retículo; DAG + Ca²⁺ activan PKC.'],
+['sen','La rodopsina de los bastones usa la proteína…',['Gt','Gs','Gq','Gi'],'Gt activa la GMPc fosfodiesterasa: baja el GMPc.'],
+['sen','La proteína Gi produce…',['Disminución de AMPc','Aumento de AMPc','Aumento de IP3','Aumento de GMPc'],'Ejemplos: α2-adrenérgico, muscarínico. También abre canales de K⁺.'],
+['sen','¿Cómo actúan las hormonas esteroideas?',['Su receptor intracelular actúa como factor de transcripción','Por proteína G y AMPc','Por receptor tirosina cinasa','Abriendo canales de Ca²⁺'],'El complejo hormona-receptor se une al HRE del ADN y activa la transcripción.'],
+['sen','¿Qué células liberan glucagón?',['Células α del páncreas','Células β del páncreas','Hepatocitos','Adipocitos'],'Glucagón: células α, 1 cadena, 29 aa. Insulina: células β, 2 cadenas, 51 aa.'],
+['sen','¿Cuántos aminoácidos tiene la insulina?',['51','29','21','110'],'Dos cadenas unidas por puentes disulfuro.'],
+['sen','Vida media aproximada de la insulina:',['6 minutos','6 horas','1 hora','30 segundos'],'Se almacena en gránulos y se degrada rápido.'],
+['sen','Al procesarse la proinsulina se libera insulina y…',['Péptido C','Glucagón','IRS','Proteína G'],'Preproinsulina → proinsulina → insulina + péptido C.'],
+['sen','En la célula β, ¿qué cierra el canal K-ATP?',['El aumento de ATP al metabolizar glucosa','El aumento de AMPc','El glucagón','La epinefrina'],'Glucosa entra por GLUT2 → glucocinasa → ↑ATP → cierra K-ATP → despolariza → entra Ca²⁺ → exocitosis.'],
+['sen','Las sulfonilureas bajan la glucemia porque…',['Cierran el canal K-ATP y liberan insulina','Inhiben el complejo I','Bloquean GLUT2','Activan el receptor del glucagón'],'Actúan sobre la subunidad SUR1 del canal.'],
+['sen','La metformina inhibe…',['El complejo I mitocondrial','La adenilato ciclasa','El canal K-ATP','GLUT4'],'↑AMP → activa AMPK y baja AMPc → ↓ gluconeogénesis.'],
+['sen','¿Cuál de estos tejidos NO depende de la insulina para captar glucosa?',['Eritrocitos','Músculo esquelético','Tejido adiposo','Músculo cardíaco'],'Insensibles: eritrocitos, hepatocitos, neuronas, mucosa intestinal, túbulos renales, córnea.'],
+['sen','Efecto clave de la insulina en músculo y tejido adiposo:',['Lleva GLUT4 a la membrana','Activa la glucosa 6-fosfatasa','Aumenta el AMPc','Activa la lipólisis'],'Las vesículas con GLUT4 se fusionan con la membrana.'],
+['sen','¿Qué tejido NO tiene receptor de glucagón?',['Músculo esquelético','Hígado','Tejido adiposo'],'Por eso el glucógeno muscular responde a epinefrina, no a glucagón.'],
+['sen','La epinefrina, sobre la liberación de insulina…',['La inhibe','La estimula','No tiene efecto','La duplica'],'Glucosa y aminoácidos la estimulan; la epinefrina la inhibe.'],
+['sen','La vitamina K activa los factores de coagulación…',['II, VII, IX y X','V y VIII','XI y XII','Solo el fibrinógeno'],'Carboxila residuos de glutamato a Gla, que unen Ca²⁺. La warfarina la bloquea.'],
+['sen','La forma activa de la vitamina D se forma en…',['El riñón (1,25-diOH-D3)','El hígado','La piel','El intestino'],'Piel → colecalciferol; hígado → 25-OH-D3; riñón → 1,25-diOH-D3 (PTH la estimula).'],
+['sen','El 11-cis retinal forma parte de…',['La rodopsina','La protrombina','La calbindina','La hemoglobina'],'Su déficit causa ceguera nocturna.'],
+['sen','Comunicación en la que la hormona viaja por la sangre:',['Endocrina','Paracrina','Autocrina'],'Paracrina: células vecinas. Autocrina: sobre sí misma.'],
+['sen','¿Cuántas hormonas hay aproximadamente?',['Unas 50','Unas 5','Unas 500','Unas 5000'],'Una hormona puede tener varias células diana.'],
+['glu','Primera enzima regulada de la glucólisis:',['Hexocinasa / glucocinasa','PFK-1','Piruvato cinasa','Aldolasa'],'Glucosa → glucosa-6P, gasta 1 ATP.'],
+['glu','Paso limitante de la glucólisis:',['PFK-1','Hexocinasa','Enolasa','Aldolasa'],'Fructosa-6P → fructosa-1,6-BP, gasta 1 ATP.'],
+['glu','El activador más potente de la PFK-1 es…',['Fructosa 2,6-bisfosfato','Citrato','ATP','Glucagón'],'También la activa el AMP. ATP y citrato la inhiben.'],
+['glu','¿Qué inhibe a la PFK-1?',['ATP y citrato','AMP y F2,6BP','Insulina','ADP'],'Mucha energía (ATP) y Krebs lleno (citrato) frenan la glucólisis.'],
+['glu','La glucocinasa tiene…',['Km alta y baja afinidad','Km baja y alta afinidad','Km baja y baja afinidad','Km igual a la hexocinasa'],'Por eso solo trabaja con glucosa alta: es sensor de glucosa.'],
+['glu','¿Dónde está la glucocinasa?',['Hígado y células β','Neuronas','Eritrocitos','Músculo esquelético'],'La hexocinasa (Km baja) está en neuronas y casi todos los tejidos.'],
+['glu','La hexocinasa es inhibida por…',['Glucosa-6-fosfato','Insulina','Glucosa','AMP'],'Inhibición por su propio producto (alostérica).'],
+['glu','¿Qué enzima de la glucólisis produce NADH?',['Gliceraldehído-3P deshidrogenasa','Fosfoglicerato cinasa','Enolasa','Aldolasa'],'GA3P → 1,3-BPG. Da 2 NADH por glucosa.'],
+['glu','Ganancia neta de ATP de la glucólisis por glucosa:',['2','4','30','0'],'Gasta 2 y produce 4.'],
+['glu','La aldolasa rompe la fructosa-1,6-BP en…',['Gliceraldehído-3P y DHAP','2 piruvatos','G6P y F6P','PEP y lactato'],'La triosa fosfato isomerasa convierte la DHAP en GA3P.'],
+['glu','La enolasa forma PEP liberando…',['H₂O','CO₂','NADH','ATP'],'2-fosfoglicerato → PEP + H₂O.'],
+['glu','La vía de Luebering-Rapapport produce…',['2,3-BPG en el eritrocito','NADPH','Lactato','Ribosa-5P'],'El 2,3-BPG regula la afinidad de la hemoglobina por el O₂.'],
+['glu','En la glucólisis anaerobia, el piruvato se convierte en…',['Lactato','Acetil-CoA','Oxalacetato','Citrato'],'La lactato DH regenera NAD⁺ para que la glucólisis siga.'],
+['glu','El glucagón inactiva la piruvato cinasa…',['Fosforilándola vía PKA','Desfosforilándola','Uniéndole citrato','Degradándola'],'Fosforilada = inactiva. Así el PEP no vuelve a piruvato en ayuno.'],
+['glu','Activador alostérico de la piruvato cinasa:',['Fructosa 1,6-bisfosfato','Glucagón','ATP','Acetil-CoA'],'Activación anterógrada: el producto de la PFK-1 activa la PK.'],
+['glu','Transportador de fructosa en el intestino:',['GLUT-5','GLUT-4','SGLT-1','GLUT-3'],'Glucosa y galactosa entran por SGLT-1 con Na⁺.'],
+['glu','Glucosa y galactosa entran al enterocito por…',['SGLT-1 con Na⁺','GLUT-5','GLUT-4','Difusión simple'],'Salen a la sangre por GLUT-2. La bomba Na⁺/K⁺ mantiene el gradiente.'],
+['glu','Transportador de glucosa que depende de insulina:',['GLUT-4','GLUT-2','GLUT-1','GLUT-3'],'En músculo esquelético, cardíaco y tejido adiposo.'],
+['glu','GLUT de las neuronas:',['GLUT-3','GLUT-4','GLUT-5','GLUT-2'],'GLUT-1: eritrocito y barrera hematoencefálica.'],
+['glu','¿Qué GLUT tiene la Km más alta (17 mM)?',['GLUT-2','GLUT-1','GLUT-3','GLUT-4'],'Sensor de glucosa en hígado, riñón y células β.'],
+['glu','¿Qué detiene a la α-amilasa salival?',['El pH ácido del estómago','La bilis','La lactasa','La insulina'],'Luego sigue la α-amilasa pancreática en el intestino.'],
+['glu','En el déficit de lactasa, ¿qué gas se mide en el aliento?',['H₂','O₂','CO','N₂'],'Las bacterias del colon fermentan la lactosa. Además atrae agua: diarrea.'],
+['glu','¿Qué carbohidrato no podemos digerir?',['Celulosa','Almidón','Sacarosa','Lactosa'],'No tenemos enzimas para sus enlaces β.'],
+['glu','La insulina, sobre la glucólisis hepática…',['Activa glucocinasa, PFK-1 y piruvato cinasa','Las inhibe','Solo activa la enolasa','No tiene efecto'],'El glucagón hace lo contrario.'],
+['pdh','¿Dónde ocurre la reacción de la piruvato DH?',['Matriz mitocondrial','Citosol','Retículo endoplásmico','Núcleo'],'El piruvato entra a la mitocondria por un transportador.'],
+['pdh','Productos de la piruvato DH:',['Acetil-CoA, CO₂ y NADH','Lactato y NAD⁺','Oxalacetato y ATP','Citrato y FADH₂'],'Es irreversible.'],
+['pdh','Coenzima de E1 (piruvato descarboxilasa):',['TPP (tiamina, B1)','FAD','Biotina','PLP'],'E1 descarboxila el piruvato: sale CO₂.'],
+['pdh','E2 (dihidrolipoil transacetilasa) usa…',['Ácido lipoico y CoA','TPP','FAD y NAD⁺','Biotina'],'E2 forma el acetil-CoA.'],
+['pdh','E3 (dihidrolipoil DH) usa…',['FAD y NAD⁺','TPP','CoA','PLP'],'Reoxida el lipoato y produce NADH.'],
+['pdh','La PDH fosforilada está…',['Inactiva','Activa','Degradada','En el citosol'],'La fosforila la PDH cinasa; la desfosforila la PDH fosfatasa.'],
+['pdh','¿Quién fosforila (apaga) la PDH?',['PDH cinasa','PDH fosfatasa','PKA','AMPK'],'La PDH cinasa se activa con ATP, acetil-CoA y NADH.'],
+['pdh','¿Qué activa la PDH fosfatasa?',['Ca²⁺','ATP','Acetil-CoA','NADH'],'En el músculo que se contrae, el Ca²⁺ enciende la PDH.'],
+['pdh','¿Qué molécula inhibe a la PDH cinasa (y así activa la PDH)?',['Piruvato','ATP','NADH','Acetil-CoA'],'Mucho sustrato mantiene encendida la PDH.'],
+['pdh','Lanzadera típica de músculo y cerebro:',['Glicerol-3-fosfato','Malato-aspartato','Citrato-piruvato','Carnitina'],'Entrega los electrones como FADH₂: 1.5 ATP por NADH citosólico.'],
+['pdh','La lanzadera malato-aspartato rinde, por NADH citosólico…',['2.5 ATP','1.5 ATP','3 ATP','1 ATP'],'Típica de hígado, corazón y riñón.'],
+['pdh','Un déficit de tiamina (B1) afecta primero a…',['E1 de la PDH','La hexocinasa','El complejo IV','La glucógeno sintasa'],'E1 usa TPP, la forma activa de la tiamina.'],
+['pdh','¿Qué enzima convierte el piruvato en oxalacetato?',['Piruvato carboxilasa','Piruvato DH','Lactato DH','Piruvato cinasa'],'Usa biotina y la activa el acetil-CoA.'],
+['kre','Primera reacción del ciclo de Krebs:',['Citrato sintasa: acetil-CoA + oxalacetato','Aconitasa','Isocitrato DH','Malato DH'],'Condensación. Es una enzima regulada.'],
+['kre','¿Cuáles son las 3 enzimas reguladas del ciclo?',['Citrato sintasa, isocitrato DH y α-cetoglutarato DH','Aconitasa, fumarasa y malato DH','Succinato DH, fumarasa y aconitasa','PDH, PFK-1 y PK'],'La profesora siempre pregunta las enzimas reguladas.'],
+['kre','¿Qué paso del ciclo produce GTP?',['Succinil-CoA sintetasa','Succinato DH','Malato DH','Fumarasa'],'Fosforilación a nivel de sustrato.'],
+['kre','¿Qué enzima del ciclo es también el complejo II?',['Succinato DH','Isocitrato DH','Malato DH','Aconitasa'],'Produce FADH₂ y lo entrega directo a la cadena.'],
+['kre','¿Cuántos NADH da una vuelta del ciclo?',['3','1','2','4'],'Isocitrato DH, α-cetoglutarato DH y malato DH.'],
+['kre','ATP por acetil-CoA oxidado en el ciclo:',['10','12','30','2'],'3 NADH × 2.5 + 1 FADH₂ × 1.5 + 1 GTP = 10.'],
+['kre','¿Qué enzimas del ciclo liberan CO₂?',['Isocitrato DH y α-cetoglutarato DH','Citrato sintasa y aconitasa','Fumarasa y malato DH','Solo succinato DH'],'Son las dos descarboxilaciones oxidativas.'],
+['kre','El succinil-CoA es precursor de…',['Porfirinas (hemo)','Colesterol','Ácidos grasos','Glucógeno'],'Hemo de Hb, mioglobina, citocromos y catalasa.'],
+['kre','¿Por qué el ciclo de Krebs es anfibólico?',['Porque es catabólico y anabólico','Porque solo produce energía','Porque solo sintetiza','Porque ocurre en dos organelos'],'Oxida acetil-CoA y da precursores de AG, colesterol, hemo, glucosa y aminoácidos.'],
+['kre','El citrato que sale al citosol sirve para…',['Sintetizar ácidos grasos y colesterol','Degradar glucógeno','Sintetizar hemo','Producir lactato'],'Además inhibe la PFK-1: regula la glucólisis.'],
+['kre','Reacción anaplerótica principal:',['Piruvato → oxalacetato','Citrato → isocitrato','Malato → fumarato','Acetil-CoA → CO₂'],'Rellena intermediarios del ciclo.'],
+['kre','¿Qué activa la isocitrato DH?',['ADP y Ca²⁺','NADH','ATP','Succinil-CoA'],'La inhiben NADH y ATP.'],
+['kre','¿Qué inhibe la α-cetoglutarato DH?',['NADH y succinil-CoA','ADP','Ca²⁺','Piruvato'],'La activa el Ca²⁺.'],
+['kre','La fumarasa realiza una…',['Hidratación','Descarboxilación','Fosforilación','Condensación'],'Fumarato + H₂O → malato.'],
+['kre','¿Qué complejo multienzimático se parece a la PDH?',['α-cetoglutarato DH','Citrato sintasa','Succinato DH','ATP sintasa'],'También la α-cetoácido DH de cadena ramificada.'],
+['res','Rendimiento de 1 NADH en la cadena:',['2.5 ATP','1.5 ATP','3 ATP','1 ATP'],'FADH₂ rinde 1.5 ATP.'],
+['res','Rendimiento de 1 FADH₂:',['1.5 ATP','2.5 ATP','3 ATP','2 ATP'],'Entra por el complejo II y no pasa por el complejo I.'],
+['res','¿Qué complejo NO bombea protones?',['II','I','III','IV'],'I bombea 4, III bombea 4, IV bombea 2.'],
+['res','Aceptor final de electrones:',['O₂','NAD⁺','Coenzima Q','Citocromo c'],'½O₂ + 2H⁺ + 2e⁻ → H₂O en el complejo IV.'],
+['res','El cianuro bloquea el complejo…',['IV','I','III','II'],'También CO y azida sódica.'],
+['res','La rotenona bloquea el complejo…',['I','II','III','IV'],'También el amital.'],
+['res','La antimicina A bloquea el complejo…',['III','I','IV','II'],'Corta el paso de CoQ a citocromo c.'],
+['res','El 2,4-dinitrofenol es…',['Un desacoplador que disipa el gradiente de H⁺','Un inhibidor del complejo IV','Un activador de la ATP sintasa','Un antioxidante'],'Ácido débil lipofílico: cruza la membrana con H⁺. La energía se pierde como calor.'],
+['res','La termogenina (UCP1) está en…',['El tejido adiposo pardo','El hígado','El eritrocito','El músculo blanco'],'Norepinefrina → AMPc → PKA → lipasa → ácidos grasos abren UCP1 → calor.'],
+['res','Subunidad de la ATP sintasa que es el canal de protones:',['F₀','F₁','La γ sola','La α sola'],'F₁ tiene la actividad enzimática: ADP + Pi → ATP.'],
+['res','Transportadores móviles de la cadena:',['Coenzima Q y citocromo c','Complejos I y III','F₀ y F₁','NADH y FAD'],'Conectan los complejos fijos.'],
+['res','ATP por glucosa usando la lanzadera malato-aspartato:',['32','30','36','2'],'Con glicerol-3P son 30.'],
+['res','¿Hacia dónde se bombean los protones?',['Al espacio intermembrana','A la matriz','Al citosol','Al núcleo'],'Vuelven a la matriz por la ATP sintasa.'],
+['res','La fuerza protón-motriz combina…',['Gradiente de protones y gradiente eléctrico','ATP y ADP','NADH y FADH₂','O₂ y CO₂'],'Es lo que acopla transporte de electrones y síntesis de ATP.'],
+['res','¿Por qué los transportadores operan en ese orden?',['Van del potencial redox más negativo al más positivo','Por su tamaño','Al azar','Por la cantidad de hierro'],'NADH (−0.32 V) → O₂ (+0.82 V): los electrones fluyen cuesta abajo.'],
+['res','El grupo redox FMN está en el complejo…',['I','II','III','IV'],'Complejo I: FMN y centros Fe-S.'],
+['res','La oxidación completa de 1 glucosa genera…',['10 NADH y 2 FADH₂','2 NADH y 2 FADH₂','6 NADH y 2 FADH₂','8 NADH y 4 FADH₂'],'2 glucólisis + 2 PDH + 6 Krebs = 10 NADH; 2 FADH₂ de Krebs.'],
+['gng','Principal vía que produce glucosa en el ayuno prolongado:',['Gluconeogénesis','Glucogenólisis muscular','Glucosa de la dieta','Lipólisis'],'Desde unas 16 h de ayuno y en inanición.'],
+['gng','En el ayuno nocturno, la gluconeogénesis ocurre en…',['Hígado 90 % y corteza renal 10 %','Hígado 60 % y riñón 40 %','Músculo 50 %','Cerebro'],'En ayuno prolongado: hígado 60 %, riñón 40 %.'],
+['gng','En el ayuno prolongado, la corteza renal aporta…',['40 %','10 %','90 %','0 %'],'El hígado aporta el 60 %.'],
+['gng','Sustratos de la gluconeogénesis:',['Glicerol, lactato y α-cetoácidos (aminoácidos)','Ácidos grasos y acetil-CoA','Colesterol y cuerpos cetónicos','Solo glucógeno'],'Glicerol del tejido adiposo, lactato del músculo y eritrocito, aminoácidos de proteínas.'],
+['gng','El ciclo de Cori lleva…',['Lactato del músculo al hígado y glucosa de vuelta','Alanina al riñón','Glicerol al músculo','Cuerpos cetónicos al cerebro'],'Hígado: lactato → glucosa. Músculo: glucosa → lactato.'],
+['gng','La piruvato carboxilasa requiere…',['Biotina','TPP','PLP','FAD'],'Ocurre en la mitocondria y gasta 1 ATP.'],
+['gng','Activador de la piruvato carboxilasa:',['Acetil-CoA','AMP','Insulina','Fructosa 2,6-BP'],'El acetil-CoA viene de la β-oxidación en ayuno.'],
+['gng','La PEP carboxicinasa usa…',['GTP','ATP','UTP','NADPH'],'Oxalacetato → PEP en el citosol.'],
+['gng','Enzima que falta en el músculo y le impide liberar glucosa:',['Glucosa 6-fosfatasa','Hexocinasa','Glucógeno fosforilasa','PFK-1'],'Solo la tienen hígado y riñón.'],
+['gng','La fructosa 1,6-bisfosfatasa es inhibida por…',['AMP y fructosa 2,6-BP','Acetil-CoA','Glucagón','Citrato'],'Es lo contrario de la PFK-1.'],
+['gng','El glicerol se fosforila en el hígado por…',['Glicerol cinasa','Hexocinasa','Lipasa sensible a hormonas','PKA'],'Glicerol → glicerol-P → DHAP.'],
+['gng','El oxalacetato sale de la mitocondria como…',['Malato','Acetil-CoA','Succinato','Piruvato'],'En el citosol vuelve a ser oxalacetato.'],
+['gng','El glucagón aumenta la gluconeogénesis porque…',['Baja la F2,6BP y libera a la FBPasa-1','Sube la F2,6BP','Activa la PFK-1','Activa la piruvato cinasa'],'PKA fosforila la PFK-2/FBP-2: domina la FBP-2.'],
+['gng','Entre unas 4 y 16 h tras comer, la glucosa viene sobre todo de…',['El glucógeno hepático','La dieta','La gluconeogénesis','El músculo'],'0–4 h: dieta. Más de 16 h: gluconeogénesis.'],
+['gng','Tirosina y fenilalanina entran a la gluconeogénesis como…',['Fumarato','Succinil-CoA','Acetil-CoA','Citrato'],'Isoleucina, metionina y valina entran como succinil-CoA.'],
+['gcg','Enlaces de las cadenas lineales del glucógeno:',['α(1→4)','α(1→6)','β(1→4)','β(1→6)'],'Las ramificaciones son α(1→6).'],
+['gcg','Donante de glucosa para sintetizar glucógeno:',['UDP-glucosa','Glucosa libre','CDP-glucosa','Glucosa-6P'],'G1P + UTP → UDP-glucosa + PPi. Sí tiene costo energético.'],
+['gcg','Coenzima de la glucógeno fosforilasa:',['PLP (vitamina B6)','Biotina','TPP','FAD'],'Libera glucosa-1-fosfato desde los extremos.'],
+['gcg','Producto de la glucógeno fosforilasa:',['Glucosa-1-fosfato','Glucosa libre','UDP-glucosa','Glucosa-6P'],'La fosfoglucomutasa la pasa a G6P.'],
+['gcg','La glucógeno fosforilasa fosforilada está…',['Activa','Inactiva'],'Es al revés que la glucógeno sintasa.'],
+['gcg','La glucógeno sintasa fosforilada está…',['Inactiva','Activa'],'La insulina la desfosforila y la activa.'],
+['gcg','Proteína que inicia la síntesis de glucógeno:',['Glucogenina','Glucógeno sintasa','Enzima ramificante','Calmodulina'],'Se autoglucosila en una tirosina.'],
+['gcg','El músculo no libera glucosa a la sangre porque…',['No tiene glucosa 6-fosfatasa','No tiene fosforilasa','No tiene glucógeno','No tiene GLUT'],'Su G6P va a la glucólisis.'],
+['gcg','En el músculo que se contrae, el Ca²⁺…',['Activa la fosforilasa cinasa vía calmodulina','Activa la glucógeno sintasa','Inhibe la fosforilasa','Activa la glucosa 6-fosfatasa'],'Activa la degradación sin necesidad de fosforilación por PKA.'],
+['gcg','En el músculo, el AMP…',['Activa la fosforilasa sin fosforilarla','Inhibe la fosforilasa','Activa la sintasa','No tiene efecto'],'Ocurre en anoxia o con el ATP agotado.'],
+['gcg','En el hígado, ¿qué inhibe a la glucógeno fosforilasa?',['Glucosa, G6P y ATP','AMP','Ca²⁺','Glucagón'],'La G6P además activa la sintasa.'],
+['gcg','Von Gierke (tipo I) es déficit de…',['Glucosa 6-fosfatasa','Fosforilasa muscular','Enzima ramificante','α-1,4-glucosidasa lisosomal'],'Hipoglucemia intensa, hepatomegalia, acidosis láctica, hiperuricemia.'],
+['gcg','McArdle (tipo V) es déficit de…',['Fosforilasa muscular','Glucosa 6-fosfatasa','Desramificante','Fosforilasa cinasa'],'Calambres y debilidad con el ejercicio.'],
+['gcg','Pompe (tipo II) es déficit de…',['α-1,4-glucosidasa lisosomal','Fosforilasa hepática','Glucógeno sintasa','PFK muscular'],'Afecta a todos los lisosomas.'],
+['gcg','Andersen (tipo IV) es déficit de…',['Enzima ramificante','Enzima desramificante','Fosforilasa','Glucosa 6-fosfatasa'],'Amilo-(1,4→1,6) transglucosidasa.'],
+['gcg','Cori (tipo III) es déficit de…',['Enzima desramificante','Enzima ramificante','Glucógeno sintasa','PFK'],'Amilo-1,6-glucosidasa.'],
+['gcg','Tarui (tipo VII) es déficit de…',['Fosfofructocinasa muscular','Fosforilasa hepática','Glucógeno sintasa','Ramificante'],'Afecta al músculo.'],
+['gcg','Glucógeno que almacena el hígado:',['~100 g (10 % de su peso)','~400 g (1–2 %)','~10 g','~1 kg'],'El músculo tiene ~400 g, pero solo para sí mismo.'],
+['gcg','La insulina activa la glucógeno sintasa porque…',['Inhibe GSK3 (vía PI3K/Akt) y activa la fosfatasa-1','Sube el AMPc','Fosforila la sintasa','Activa la PKA'],'Desfosforilada = activa.'],
+['gcg','La desramificante libera la glucosa del enlace α(1→6) como…',['Glucosa libre','Glucosa-1P','UDP-glucosa','Glucosa-6P'],'Antes transfiere 3 glucosas a otra cadena (actividad transferasa).'],
+['pen','Enzima regulada de la vía de las pentosas:',['Glucosa-6-fosfato deshidrogenasa','Transcetolasa','Transaldolasa','Hexocinasa'],'La insulina induce su gen.'],
+['pen','¿Cuánto ATP produce o gasta la vía de las pentosas?',['Ninguno','Produce 2','Gasta 1','Produce 36'],'Su valor está en el NADPH y la ribosa-5P.'],
+['pen','¿Qué produce la fase oxidativa?',['NADPH','ATP','Lactato','FADH₂'],'Es irreversible.'],
+['pen','La fase no oxidativa es…',['Reversible','Irreversible'],'Da ribosa-5P o vuelve a la glucólisis como F6P y GA3P.'],
+['pen','La ribosa-5P se usa para fabricar…',['Nucleótidos (ADN, ARN)','Glucógeno','Colesterol','Hemo'],'Viene de la fase no oxidativa.'],
+['pen','En el eritrocito, el NADPH sirve para…',['Mantener reducido el glutatión','Sintetizar ácidos grasos','Sintetizar esteroides','Producir ATP'],'Sin glutatión reducido, el H₂O₂ daña la membrana.'],
+['pen','Testículos, ovarios, placenta y corteza suprarrenal usan el NADPH para…',['Sintetizar esteroides','Mantener el glutatión','Producir ribosa','Glucólisis'],'Hígado, mama y adiposo lo usan para ácidos grasos.'],
+['pen','El glutatión es un tripéptido de…',['Glutamato, cisteína y glicina','Glicina, alanina y serina','Lisina, arginina y histidina','Glutamina, tirosina y valina'],'El –SH de la cisteína es el reductor.'],
+['pen','La glutatión peroxidasa contiene…',['Selenio','Hierro hemo','Cobre','Biotina'],'Usa 2 GSH para convertir H₂O₂ en agua.'],
+['pen','¿Qué hace la catalasa?',['H₂O₂ → H₂O + O₂','O₂·⁻ → H₂O₂','GSSG → 2 GSH','NADP⁺ → NADPH'],'La superóxido dismutasa convierte el superóxido en H₂O₂.'],
+['pen','¿Qué regenera el glutatión reducido (GSH)?',['Glutatión reductasa usando NADPH','Glutatión peroxidasa','Catalasa','G6PD directamente'],'GSSG + NADPH → 2 GSH + NADP⁺.'],
+['pen','El déficit de G6PD causa…',['Anemia hemolítica','Hipoglucemia en ayunas','Calambres musculares','Ceguera nocturna'],'Menos NADPH → menos GSH → H₂O₂ lisa el eritrocito.'],
+['pen','En el déficit de G6PD, el favismo se desencadena al comer…',['Habas','Leche','Fresas','Maní'],'También fármacos oxidantes e infecciones.'],
+['pen','Los cuerpos de Heinz son…',['Hemoglobina desnaturalizada','Glucógeno acumulado','Lípidos oxidados','Restos de ADN'],'Aparecen en el eritrocito por daño oxidativo.'],
+['sen','Los segmentos E1–E4 del receptor 7TM están…',['Fuera de la célula (con el N-terminal)','Dentro de la célula (con el C-terminal)','En el núcleo','En la mitocondria'],'C1–C4 son intracelulares, con el C-terminal.'],
+['sen','¿Qué tipo de receptor usan las hormonas esteroideas?',['Intracelular (factor de transcripción)','De membrana acoplado a proteína G','De membrana con actividad tirosina cinasa','Canal iónico'],'Los 3 tipos: 7TM con proteína G, tirosina cinasa (insulina) e intracelular (esteroides).'],
+['sen','Además del metabolismo, el receptor de insulina activa la vía MAPK, que regula…',['Crecimiento y diferenciación celular','La glucogenólisis','La lipólisis','La liberación de glucagón'],'La vía PI3K/Akt se encarga de los efectos metabólicos.'],
+['sen','¿Qué insulina se usa hoy como tratamiento?',['Humana recombinante','Solo de cerdo','Solo de vaca','Extraída de páncreas humano'],'Antes se usaba insulina de cerdo y de vaca.'],
+['sen','En las proteínas, el glucagón produce…',['Captación de aminoácidos por el hígado','Síntesis de proteínas muscular','Liberación de insulina','Nada'],'En lípidos produce lipólisis; en carbohidratos, glucogenólisis hepática y gluconeogénesis.'],
+['sen','La vitamina A viaja en la sangre unida a…',['RBP (proteína de unión al retinol)','Albúmina solamente','Transferrina','Hemoglobina'],'Se almacena en el hígado.'],
+['sen','Además de la absorción intestinal, la vitamina D aumenta…',['La reabsorción renal de Ca²⁺ y su movilización desde el hueso','La excreción de Ca²⁺','La secreción de calcitonina','La síntesis de vitamina K'],'Si el calcio en plasma baja, la PTH estimula la formación de 1,25-diOH-D3.'],
+['glu','En las etapas del catabolismo, ¿en qué molécula convergen proteínas, carbohidratos y grasas?',['Acetil-CoA','Glucosa','Piruvato','Lactato'],'Luego entra al ciclo de Krebs → ATP y CO₂.'],
+['glu','El transporte de glucosa por los GLUT es…',['Difusión facilitada','Transporte activo con ATP','Cotransporte con Na⁺','Difusión simple'],'Hay 14 isoformas (GLUT-1 a GLUT-14). El cotransporte con Na⁺ es de los SGLT.'],
+['glu','Además de lactato y acetil-CoA, el piruvato puede dar etanol, vía…',['Acetaldehído (descarboxilación con TPP)','Citrato','Oxalacetato','Glicerol'],'Ocurre en levaduras.'],
+['res','Al oxidarse por completo, una glucosa libera…',['24 electrones','2 electrones','6 electrones','12 electrones'],'C6H12O6 + 6 H2O → 6 CO2 + 24 H⁺ + 24 e⁻. Los recogen NADH y FADH₂.'],
+['res','¿Dónde está la cadena de transporte de electrones?',['Membrana mitocondrial interna (crestas)','Membrana externa','Matriz','Espacio intermembrana'],'Matriz: Krebs y PDH. Espacio intermembrana: alta concentración de H⁺.'],
+['gng','Costo de pasar de 2 piruvatos a 1 glucosa:',['4 ATP + 2 GTP + 2 NADH','2 ATP','36 ATP','Ningún costo'],'2 ATP de la piruvato carboxilasa, 2 GTP de la PEPCK y 2 ATP de la fosfoglicerato cinasa.'],
+['gng','En la inanición tardía (días de ayuno), la glucosa viene sobre todo de…',['Gluconeogénesis','Glucógeno hepático','La dieta','Glucógeno muscular'],'Fases: I posprandial, II ayuno, IIIa inanición temprana, IIIb inanición tardía.'],
+['gng','Isoleucina, metionina y valina entran a la gluconeogénesis como…',['Succinil-CoA','Fumarato','Acetil-CoA','Citrato'],'También el propionato.'],
+['gcg','La glucosa-6P es una encrucijada: puede ir a…',['Glucólisis, síntesis de glucógeno o vía de las pentosas','Solo glucólisis','Solo glucógeno','Ciclo de la urea'],'Todo ocurre en el citosol.'],
+['gcg','¿Qué impulsa la síntesis de UDP-glucosa?',['La pirofosfatasa rompe el PPi en 2 Pi','La glucosa 6-fosfatasa','La fosforilasa','El AMPc'],'Al quitar el PPi la reacción no puede revertirse.'],
+['gcg','¿Qué aporta la modificación covalente de la fosforilasa y la sintasa?',['Un control más fino de su respuesta a los efectores alostéricos','La degradación de las enzimas','La síntesis de nuevas enzimas','Nada'],'Se suma al control alostérico y al hormonal.'],
+['gcg','El tipo Ib de Von Gierke es déficit de…',['Translocasa de glucosa-6P','Glucosa 6-fosfatasa','Fosforilasa','Ramificante'],'El tipo Ia es déficit de la propia glucosa 6-fosfatasa.'],
+['gcg','La enfermedad tipo VIII (deficiencia de fosforilasa cinasa) está ligada al…',['Cromosoma X','Cromosoma Y','ADN mitocondrial','Cromosoma 21'],'Afecta al hígado; el tipo IX afecta a todos los órganos.'],
+['pen','Intermediarios de la fase no oxidativa:',['Xilulosa-5P, sedoheptulosa-7P y eritrosa-4P','Citrato e isocitrato','Lactato y alanina','PEP y piruvato'],'Los mueven la transcetolasa y la transaldolasa.'],
+['pen','En el eritrocito, el superóxido se forma cuando…',['La hemoglobina se oxida (Fe²⁺ → Fe³⁺, metahemoglobina)','Se sintetiza glucógeno','Se activa la PKA','Entra glucosa por GLUT-1'],'La superóxido dismutasa lo convierte en H₂O₂.'],
+['pen','¿Por qué una infección puede causar hemólisis en el déficit de G6PD?',['La inflamación produce radicales libres','Baja la insulina','Sube el AMPc','Se bloquea GLUT-1'],'Otros desencadenantes: fármacos oxidantes y habas.']
+];
+var SORT=[['Insulina alta','fed'],['AMPc bajo','fed'],['Glucógeno sintasa activa','fed'],['PFK-2 desfosforilada','fed'],['Fructosa 2,6-BP alta','fed'],['Piruvato cinasa desfosforilada (activa)','fed'],['GLUT4 en la membrana','fed'],['Síntesis de ácidos grasos','fed'],['Inducción del gen de G6PD','fed'],['Glucocinasa inducida','fed'],['Glucólisis en el hígado','fed'],['Síntesis de proteínas','fed'],['Glucagón alto','fast'],['AMPc alto','fast'],['PKA activa','fast'],['Glucógeno fosforilasa activa','fast'],['Gluconeogénesis','fast'],['Fructosa 1,6-bisfosfatasa activa','fast'],['Fructosa 2,6-BP baja','fast'],['Piruvato cinasa fosforilada','fast'],['Lipólisis','fast'],['Piruvato carboxilasa activada por acetil-CoA','fast'],['Glucógeno sintasa fosforilada','fast'],['Captación de aminoácidos por el hígado','fast'],['Ciclo de Cori','fast'],['Glucosa 6-fosfatasa liberando glucosa','fast']];
+var ORDER=[
+['Glucólisis: de glucosa a piruvato',['Glucosa','Glucosa-6P','Fructosa-6P','Fructosa-1,6-BP','Gliceraldehído-3P','1,3-BPG','3-fosfoglicerato','2-fosfoglicerato','PEP','Piruvato']],
+['Ciclo de Krebs desde el citrato',['Citrato','Isocitrato','α-cetoglutarato','Succinil-CoA','Succinato','Fumarato','Malato','Oxalacetato']],
+['Cadena de transporte de electrones',['NADH','Complejo I','Coenzima Q','Complejo III','Citocromo c','Complejo IV','O₂ → H₂O']],
+['Señal del glucagón',['Glucagón','Receptor 7TM','Gα suelta GDP y toma GTP','Adenilato ciclasa','AMPc','PKA libera subunidades C','Fosforilación de enzimas']],
+['Liberación de insulina en la célula β',['Glucosa entra por GLUT2','Glucocinasa','Sube el ATP','Se cierra el canal K-ATP','Despolarización','Entra Ca²⁺','Exocitosis de insulina']],
+['Gluconeogénesis: de piruvato a glucosa',['Piruvato','Oxalacetato (mitocondria)','Malato sale al citosol','PEP','Fructosa-1,6-BP','Fructosa-6P','Glucosa-6P','Glucosa']],
+['Activación de la vitamina D',['Piel: luz UV','Colecalciferol','Hígado: 25-OH-D3','Riñón: 1,25-diOH-D3','Absorción intestinal de Ca²⁺']],
+['Síntesis de glucógeno',['Glucosa','Glucosa-6P','Glucosa-1P','UDP-glucosa','Glucogenina inicia','Glucógeno sintasa alarga','Enzima ramificante']],
+['Complejo piruvato DH',['Piruvato entra a la matriz','E1 (TPP) libera CO₂','E2 (lipoico) pasa el acetilo','Se forma acetil-CoA','E3 (FAD) reoxida el lipoato','Se forma NADH']],
+['Defensa antioxidante del eritrocito',['G6PD produce NADPH','Glutatión reductasa','GSSG → 2 GSH','Glutatión peroxidasa','H₂O₂ → H₂O']]
+];
+var MATCH=[
+['Enfermedades del glucógeno',[['Von Gierke','Glucosa 6-fosfatasa'],['Pompe','α-1,4-glucosidasa lisosomal'],['Cori','Desramificante'],['Andersen','Ramificante'],['McArdle','Fosforilasa muscular'],['Hers','Fosforilasa hepática'],['Tarui','Fosfofructocinasa']]],
+['Inhibidores y fármacos',[['Rotenona','Complejo I'],['Antimicina A','Complejo III'],['Cianuro','Complejo IV'],['2,4-DNP','Desacoplador'],['Warfarina','Vitamina K'],['Sulfonilureas','Canal K-ATP'],['Viagra','Fosfodiesterasa']]],
+['Coenzimas y cofactores',[['TPP (B1)','E1 de la PDH'],['Ácido lipoico + CoA','E2 de la PDH'],['FAD + NAD⁺','E3 de la PDH'],['Biotina','Piruvato carboxilasa'],['PLP (B6)','Glucógeno fosforilasa'],['Selenio','Glutatión peroxidasa'],['GTP','PEP carboxicinasa']]],
+['Transportadores de glucosa',[['GLUT-1','Eritrocito y barrera hematoencefálica'],['GLUT-2','Hígado, riñón y células β'],['GLUT-3','Neuronas'],['GLUT-4','Músculo y adiposo, con insulina'],['GLUT-5','Fructosa en el intestino'],['SGLT-1','Glucosa + Na⁺ en el intestino'],['SGLT-2','Células renales']]],
+['Proteínas G',[['Gs','Aumenta el AMPc'],['Gi','Disminuye el AMPc'],['Gq','Fosfolipasa C: IP3 y DAG'],['Gt','Rodopsina: baja el GMPc'],['Golf','Receptores olfatorios']]],
+['¿Dónde ocurre?',[['Glucólisis','Citosol'],['Ciclo de Krebs','Matriz mitocondrial'],['Cadena respiratoria','Membrana interna mitocondrial'],['Gluconeogénesis','Hígado y corteza renal'],['Termogenina','Tejido adiposo pardo'],['Activación de vitamina D','Riñón']]]
+];
+var LEVELS=['Glucosa suelta','Glucosa-6P','Piruvato','Acetil-CoA','NADH cargado','Protón bombeado','ATP sintasa','Mitocondria experta','Hepatocito maestro','Endocrinólogo','Leyenda del metabolismo'];
+var PER=150;
+
+// Estado guardado
+var S={xp:0,best:0,m:{}};
+try{var raw=localStorage.getItem('metaquest');if(raw){var p=JSON.parse(raw);if(p&&typeof p==='object')S=Object.assign(S,p)}}catch(e){}
+function save(){try{localStorage.setItem('metaquest',JSON.stringify(S))}catch(e){}}
+var topic='all';
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function level(x){return Math.floor(x/PER)+1}
+
+function renderHud(){
+  var l=level(S.xp);$('lvl').textContent=l;
+  $('lvlname').textContent=LEVELS[Math.min(l-1,LEVELS.length-1)];
+  var r=S.xp%PER;$('xpfill').style.width=(r/PER*100)+'%';
+  $('xptext').textContent=r+' / '+PER+' XP · total '+S.xp;
+  $('best').textContent=S.best;
+}
+function renderHome(){
+  var c=$('topics');c.innerHTML='';
+  [['all','Todos']].concat(Object.keys(T).map(function(k){return[k,T[k]]})).forEach(function(t){
+    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t[1];
+    b.setAttribute('aria-pressed',topic===t[0]?'true':'false');
+    b.onclick=function(){topic=t[0];renderHome()};c.appendChild(b);
+  });
+  var m=$('mastery');m.innerHTML='';
+  Object.keys(T).forEach(function(k){
+    var d=S.m[k]||{ok:0,n:0};var pct=d.n?Math.round(d.ok/d.n*100):0;
+    var row=document.createElement('div');row.className='mrow';
+    row.innerHTML='<span>'+T[k]+'</span><div class="mbar"><i style="width:'+pct+'%"></i></div><span>'+(d.n?pct+' %':'—')+'</span>';
+    m.appendChild(row);
+  });
+  renderHud();
+}
+
+var G=$('game'),H=$('home'),timerId=null;
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}
+function show(screen){stopTimer();H.hidden=screen!=='home';G.hidden=screen==='home';if(screen==='home')renderHome();window.scrollTo(0,0)}
+function floatTxt(t){var d=document.createElement('div');d.className='float';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},900)}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
+function topbar(statsHtml){return '<div class="top"><button class="back" type="button" id="quit">← Salir</button><div class="stats" id="stats">'+statsHtml+'</div></div>'}
+function bindQuit(){$('quit').onclick=function(){show('home')}}
+
+// ---------- Contrarreloj ----------
+function quiz(){
+  var pool=Q.filter(function(q){return topic==='all'||q[0]===topic});
+  var qs=shuffle(pool).slice(0,10),i=0,lives=3,streak=0,maxStreak=0,score=0,ok=0,missed=[],t=20,answered=false;
+  function stats(){return '<span class="lives" aria-label="'+lives+' vidas">'+'♥'.repeat(lives)+'<span style="opacity:.25">'+'♥'.repeat(3-lives)+'</span></span><span class="combo">×'+mult()+'</span><span>'+score+' pts</span>'}
+  function mult(){return 1+Math.floor(streak/3)*0.5}
+  function draw(){
+    var q=qs[i];answered=false;t=20;
+    var opts=shuffle(q[2].map(function(x,k){return{x:x,ok:k===0}}));
+    G.innerHTML=topbar(stats())+'<div class="timer" id="tbar"><i style="width:100%"></i></div>'+
+      '<div class="card"><span class="tag">'+T[q[0]]+' · '+(i+1)+' / '+qs.length+'</span><p class="q">'+esc(q[1])+'</p><div class="opts" id="opts"></div><div id="after"></div></div>';
+    bindQuit();
+    var box=$('opts');
+    opts.forEach(function(o,k){
+      var b=document.createElement('button');b.type='button';b.className='opt';b.dataset.ok=o.ok?'1':'';
+      b.innerHTML='<kbd>'+(k+1)+'</kbd><span>'+esc(o.x)+'</span>';
+      b.onclick=function(){answer(b)};box.appendChild(b);
+    });
+    timerId=setInterval(function(){
+      t-=0.1;var bar=$('tbar');if(!bar)return;
+      bar.firstChild.style.width=Math.max(0,t/20*100)+'%';bar.classList.toggle('low',t<6);
+      if(t<=0)answer(null);
+    },100);
+  }
+  function answer(btn){
+    if(answered)return;answered=true;stopTimer();
+    var q=qs[i],btns=[].slice.call(document.querySelectorAll('.opt'));
+    btns.forEach(function(b){b.disabled=true;if(b.dataset.ok)b.classList.add('ok')});
+    var good=btn&&btn.dataset.ok;
+    var d=S.m[q[0]]||{ok:0,n:0};d.n++;
+    if(good){
+      streak++;ok++;d.ok++;maxStreak=Math.max(maxStreak,streak);
+      var pts=Math.round((10+Math.ceil(t))*mult());score+=pts;floatTxt('+'+pts);
+    }else{
+      if(btn)btn.classList.add('no');lives--;streak=0;missed.push(q);
+      shake(document.querySelector('.card'));
+    }
+    S.m[q[0]]=d;
+    $('stats').innerHTML=stats();
+    var last=(i>=qs.length-1)||lives<=0;
+    $('after').innerHTML='<div class="explain"><b>'+(good?'¡Correcto!':(btn?'No es esa.':'Se acabó el tiempo.'))+'</b> '+esc(q[3])+'</div><button class="next" type="button" id="nx">'+(last?'Ver resultado':'Siguiente')+' ↵</button>';
+    $('nx').onclick=function(){if(last)finish();else{i++;draw()}};
+    $('nx').focus({preventScroll:true});
+  }
+  function finish(){
+    end('Contrarreloj',score,[['Aciertos',ok+' / '+(i+1)],['Mejor racha',maxStreak],['Vidas',lives]],missed,maxStreak,quiz);
+  }
+  keyHandler=function(e){
+    if(G.hidden)return;
+    if(!answered&&/^[1-4]$/.test(e.key)){var b=document.querySelectorAll('.opt')[+e.key-1];if(b)answer(b)}
+    else if(answered&&e.key==='Enter'){var n=$('nx');if(n&&document.activeElement!==n)n.click()}
+  };
+  if(!qs.length){show('home');return}
+  show('game');draw();
+}
+
+// ---------- Comida o ayuno ----------
+function sorter(){
+  var items=shuffle(SORT).slice(0,16),i=0,score=0,streak=0,maxStreak=0,ok=0,t=60,missed=[],busy=false;
+  function stats(){return '<span class="combo">×'+(1+Math.floor(streak/4))+'</span><span>'+score+' pts</span><span>'+Math.ceil(t)+' s</span>'}
+  G.innerHTML=topbar(stats())+'<div class="timer" id="tbar"><i style="width:100%"></i></div><div class="card"><span class="tag" id="cnt"></span><div class="swcard" id="sw"></div><div class="bins"><button class="bin fed" type="button" id="bf">Comida<small>← insulina</small></button><button class="bin fast" type="button" id="bz">Ayuno<small>glucagón →</small></button></div><div class="flash" id="fl"></div></div>';
+  bindQuit();
+  function draw(){$('sw').className='swcard';$('sw').textContent=items[i][0];$('cnt').textContent='Tarjeta '+(i+1)+' / '+items.length}
+  function pick(v){
+    if(busy)return;busy=true;
+    var it=items[i],good=it[1]===v,sw=$('sw');
+    if(good){streak++;ok++;maxStreak=Math.max(maxStreak,streak);var pts=10*(1+Math.floor(streak/4));score+=pts;floatTxt('+'+pts);$('fl').innerHTML='<span style="color:var(--good)">Bien.</span>'}
+    else{streak=0;missed.push(it);shake(sw);$('fl').innerHTML='<span style="color:var(--bad)">Era de '+(it[1]==='fed'?'comida':'ayuno')+'.</span>'}
+    sw.classList.add(v==='fed'?'l':'r');
+    $('stats').innerHTML=stats();
+    setTimeout(function(){busy=false;i++;if(i>=items.length)done();else draw()},good?220:700);
+  }
+  function done(){stopTimer();end('¿Comida o ayuno?',score,[['Aciertos',ok+' / '+i],['Mejor racha',maxStreak],['Tiempo',Math.ceil(t)+' s']],missed.map(function(m){return['',m[0]+'?',['Estado: '+(m[1]==='fed'?'comida (insulina)':'ayuno (glucagón)')],'']}),maxStreak,sorter)}
+  $('bf').onclick=function(){pick('fed')};$('bz').onclick=function(){pick('fast')};
+  keyHandler=function(e){if(G.hidden)return;if(e.key==='ArrowLeft')pick('fed');if(e.key==='ArrowRight')pick('fast')};
+  show('game');
+  draw();
+  timerId=setInterval(function(){t-=0.1;var bar=$('tbar');if(!bar)return;bar.firstChild.style.width=Math.max(0,t/60*100)+'%';bar.classList.toggle('low',t<10);if(Math.abs(t*10%10)<1)$('stats').innerHTML=stats();if(t<=0)done()},100);
+}
+
+// ---------- Ordena la vía ----------
+var lastOrder=-1;
+function orderer(){
+  var k;do{k=Math.floor(Math.random()*ORDER.length)}while(k===lastOrder&&ORDER.length>1);lastOrder=k;
+  var name=ORDER[k][0],seq=ORDER[k][1],pos=0,errors=0,start=Date.now();
+  show('game');
+  G.innerHTML=topbar('<span id="err">0 errores</span>')+'<div class="card"><span class="tag">Ordena la vía</span><p class="q">'+esc(name)+'</p><p class="hint">Toca los pasos en orden. Empieza por el primero.</p><div class="slots" id="slots"></div><div class="pool" id="pool"></div></div>';
+  bindQuit();
+  var pool=$('pool');
+  shuffle(seq).forEach(function(s){
+    var b=document.createElement('button');b.type='button';b.className='tile';b.textContent=s;
+    b.onclick=function(){
+      if(s===seq[pos]){pos++;b.remove();var sl=document.createElement('span');sl.className='slot';sl.textContent=s;$('slots').appendChild(sl);
+        if(pos===seq.length){var secs=Math.round((Date.now()-start)/1000);var score=Math.max(10,seq.length*12-errors*8)+(secs<30?20:0);
+          setTimeout(function(){end('Ordena la vía',score,[['Pasos',seq.length],['Errores',errors],['Tiempo',secs+' s']],[],errors===0?seq.length:0,orderer,name)},350)}}
+      else{errors++;$('err').textContent=errors+(errors===1?' error':' errores');shake(b)}
+    };
+    pool.appendChild(b);
+  });
+  keyHandler=null;
+}
+
+// ---------- Conecta ----------
+var lastMatch=-1;
+function matcher(){
+  var k;do{k=Math.floor(Math.random()*MATCH.length)}while(k===lastMatch&&MATCH.length>1);lastMatch=k;
+  var name=MATCH[k][0],pairs=shuffle(MATCH[k][1]).slice(0,5),left=null,done=0,errors=0,start=Date.now();
+  show('game');
+  G.innerHTML=topbar('<span id="err">0 errores</span>')+'<div class="card"><span class="tag">Conecta</span><p class="q">'+esc(name)+'</p><p class="hint">Toca un elemento de la izquierda y luego su pareja de la derecha.</p><div class="cols"><div class="col" id="cl"></div><div class="col" id="cr"></div></div></div>';
+  bindQuit();
+  pairs.forEach(function(p,idx){var b=document.createElement('button');b.type='button';b.className='pair';b.textContent=p[0];b.dataset.i=idx;b.onclick=function(){if(b.classList.contains('done'))return;[].forEach.call(document.querySelectorAll('#cl .pair'),function(x){x.classList.remove('sel')});b.classList.add('sel');left=b};$('cl').appendChild(b)});
+  shuffle(pairs.map(function(p,idx){return[p[1],idx]})).forEach(function(p){var b=document.createElement('button');b.type='button';b.className='pair';b.textContent=p[0];b.dataset.i=p[1];
+    b.onclick=function(){if(b.classList.contains('done'))return;if(!left){shake(b);return}
+      if(left.dataset.i===b.dataset.i){left.classList.remove('sel');left.classList.add('done');b.classList.add('done');left.disabled=true;b.disabled=true;left=null;done++;
+        if(done===pairs.length){var secs=Math.round((Date.now()-start)/1000);var score=Math.max(10,70-errors*10)+(secs<25?20:0);setTimeout(function(){end('Conecta',score,[['Parejas',pairs.length],['Errores',errors],['Tiempo',secs+' s']],[],errors===0?pairs.length:0,matcher,name)},350)}}
+      else{errors++;$('err').textContent=errors+(errors===1?' error':' errores');shake(b)}};
+    $('cr').appendChild(b)});
+  keyHandler=null;
+}
+
+// ---------- Resultado ----------
+function end(mode,score,rows,missed,streak,again,sub){
+  stopTimer();keyHandler=null;
+  var before=level(S.xp);S.xp+=score;if(streak>S.best)S.best=streak;save();var after=level(S.xp);
+  var html=topbar('')+'<div class="card result"><span class="tag">'+esc(mode)+(sub?' · '+esc(sub):'')+'</span><div class="big">+'+score+' XP</div>'+
+    (after>before?'<span class="lvup">Subiste a nivel '+after+': '+esc(LEVELS[Math.min(after-1,LEVELS.length-1)])+'</span>':'')+
+    '<div class="rgrid">'+rows.map(function(r){return'<span><b>'+esc(r[1])+'</b>'+esc(r[0])+'</span>'}).join('')+'</div>';
+  if(missed.length){html+='<div class="missed"><span class="tag">Para repasar</span>'+missed.map(function(m){return'<div class="miss"><b>'+esc(m[1])+'</b><span class="ans">'+esc(m[2][0])+'</span>'+(m[3]?' · '+esc(m[3]):'')+'</div>'}).join('')+'</div>'}
+  html+='<div class="row2"><button class="ghost" type="button" id="home2">Inicio</button><button class="next" style="margin:0" type="button" id="again">Jugar otra vez</button></div></div>';
+  G.innerHTML=html;bindQuit();renderHud();
+  $('home2').onclick=function(){show('home')};$('again').onclick=function(){again()};
+  if(after>before||score>=120)confetti();
+}
+
+// Confeti
+function confetti(){
+  try{if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
+  var c=$('fx'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+  var cs=getComputedStyle(document.documentElement),cols=['--accent','--pop','--gold','--good'].map(function(v){return cs.getPropertyValue(v).trim()});
+  var ps=[];for(var i=0;i<120;i++)ps.push({x:c.width/2,y:c.height*0.35,vx:(Math.random()-0.5)*14,vy:-Math.random()*12-4,r:Math.random()*6+3,c:cols[i%4],a:Math.random()*6});
+  var f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(function(p){p.vy+=0.35;p.x+=p.vx;p.y+=p.vy;p.a+=0.2;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore()});if(++f<110)requestAnimationFrame(tick);else x.clearRect(0,0,c.width,c.height)})();
+}
+
+var keyHandler=null;
+document.addEventListener('keydown',function(e){if(keyHandler)keyHandler(e)});
+[].forEach.call(document.querySelectorAll('.mode'),function(b){b.onclick=function(){({quiz:quiz,sort:sorter,order:orderer,match:matcher})[b.dataset.mode]()}});
+$('reset').onclick=function(){
+  var r=$('reset');
+  if(r.dataset.arm){S={xp:0,best:0,m:{}};save();r.textContent='Progreso borrado';delete r.dataset.arm;renderHome();setTimeout(function(){r.textContent='Borrar mi progreso'},1500)}
+  else{r.dataset.arm='1';r.textContent='Toca otra vez para confirmar';setTimeout(function(){if(r.dataset.arm){delete r.dataset.arm;r.textContent='Borrar mi progreso'}},3000)}
+};
+renderHome();
+})();
+</script>
