@@ -20,7 +20,14 @@ El hosting solo sirve los archivos de la app. Tus movimientos nunca salen del di
 - **Android / Chrome / Edge:** Ajustes de la app → "Instalar", o menú ⋮ → "Instalar app".
 - **iPhone / iPad:** Safari → Compartir ⬆️ → "Agregar a pantalla de inicio".
 
-## Sincronización iPhone ↔ iPad (cifrada)
+## Cuenta (recomendado)
+- Al abrir por primera vez: **Crear cuenta** (usuario + contraseña), **Ya tengo cuenta** o **Continuar sin cuenta**.
+- Inicia sesión con el mismo usuario en otro dispositivo y los datos aparecen solos.
+- La contraseña nunca sale del dispositivo: se derivan una llave de acceso y una de cifrado (PBKDF2 310k + HKDF).
+- Supabase guarda solo una huella bcrypt de la llave de acceso y los datos cifrados. 5 intentos fallidos → bloqueo de 5 min.
+- Olvidar la contraseña = la copia de la nube no se puede descifrar (los datos del dispositivo siguen ahí).
+
+## Sincronización con código (alternativa)
 1. En un dispositivo: Ajustes → Sincronización → **Activar aquí**. Copia el código (24 caracteres).
 2. En el otro: Ajustes → Sincronización → **Tengo un código** y pégalo.
 3. Listo: los cambios viajan solos en segundos (al guardar, al abrir la app y cada 20 s).
