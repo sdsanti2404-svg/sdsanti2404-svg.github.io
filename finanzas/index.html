@@ -326,7 +326,7 @@
   <!-- ============ INICIO ============ -->
   <section id="v-inicio">
     <div class="topbar">
-      <span class="hand hand-note">Paso a paso,<br>mejores finanzas ↗</span>
+      <span class="hand hand-note">Paso a paso,<br>mejores finanzas ↗︎</span>
       <button class="avatar" id="avatar" aria-label="Ajustes"></button>
     </div>
     <p class="hello" id="hello"></p>
@@ -368,7 +368,7 @@
       <b id="totalBal" style="font-size:17px"></b>
     </div></div>
     </div>
-    <div class="footnote"><span class="hand hand-note">mejor que ayer ↗</span></div>
+    <div class="footnote"><span class="hand hand-note">mejor que ayer ↗︎</span></div>
   </section>
 
   <!-- ============ MOVIMIENTOS ============ -->
@@ -456,7 +456,7 @@
       <button class="btn dark block hidden" id="installBtn">Instalar en este dispositivo</button>
       <p class="muted" id="installHint" style="margin:8px 0 0;font-size:13px"></p>
     </div>
-    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7 · funciona sin conexión</p>
+    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7.1 · funciona sin conexión</p>
   </section>
 </main>
 
@@ -469,7 +469,7 @@
     <button data-view="pres"><span data-ic="target" data-s="21"></span><span class="lbl">Presupuestos</span></button>
     <button data-view="ajustes"><span data-ic="settings" data-s="21"></span><span class="lbl">Ajustes</span></button>
   </nav>
-  <div class="side-foot"><span class="hand hand-note">mejor que ayer ↗</span></div>
+  <div class="side-foot"><span class="hand hand-note">mejor que ayer ↗︎</span></div>
 </aside>
 
 <div class="navwrap"><div class="navin">
@@ -1339,7 +1339,7 @@ function deleteAccountFlow() {
 function showWelcome() {
   showLock();
   const lk = $('#lkBody');
-  lk.innerHTML = `<span class="hand hand-note" style="display:inline-block;margin-bottom:12px">paso a paso, mejores finanzas ↗</span>
+  lk.innerHTML = `<span class="hand hand-note" style="display:inline-block;margin-bottom:12px">paso a paso, mejores finanzas ↗︎</span>
     <div class="lk-av" style="border-radius:22px;overflow:hidden;background:none"><img src="icons/icon-192.png" alt="" width="76" height="76"></div>
     <h2 style="margin-top:14px">Mis Finanzas</h2>
     <p class="muted sub">Organiza ingresos, gastos y presupuestos. Privado y cifrado.</p>
@@ -1426,7 +1426,7 @@ function lockApp() { showLock(); renderPicker(); }
 
 function renderPicker() {
   const lk = $('#lkBody');
-  lk.innerHTML = `<span class="hand hand-note" style="display:inline-block;margin-bottom:10px">tus finanzas, tu espacio ↗</span>
+  lk.innerHTML = `<span class="hand hand-note" style="display:inline-block;margin-bottom:10px">tus finanzas, tu espacio ↗︎</span>
     <h2>¿Quién eres?</h2><p class="muted sub">Elige tu perfil para entrar.</p>
     <div class="pgrid">${PROFILES.map((p) => `<button data-p="${p.id}"><div class="lk-av">${esc(initial(p.name))}</div><span class="ell" style="max-width:110px">${esc(p.name)}</span>
       <small>${p.hash ? ic('lock', 11) + 'Con PIN' : 'Sin PIN'}</small></button>`).join('')}</div>
