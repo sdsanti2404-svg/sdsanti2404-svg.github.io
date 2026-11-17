@@ -456,7 +456,7 @@
       <button class="btn dark block hidden" id="installBtn">Instalar en este dispositivo</button>
       <p class="muted" id="installHint" style="margin:8px 0 0;font-size:13px"></p>
     </div>
-    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v6 · funciona sin conexión</p>
+    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7 · funciona sin conexión</p>
   </section>
 </main>
 
@@ -1511,7 +1511,7 @@ async function loadProfile(id) {
     try { const key = await crypto.subtle.importKey('raw', fromB64(sync.k), 'AES-GCM', false, ['encrypt', 'decrypt']);
       Object.assign(SY, { mode: 'account', user: sync.user, kraw: sync.k, code: null, id: sync.vid, key, rev: sync.rev || 0, last: sync.last || 0, status: 'ok' }); syncNow(); } catch {}
   } else if (sync && sync.code) { try { const v = await deriveVault(sync.code); Object.assign(SY, { mode: 'code', code: sync.code, id: v.id, key: v.key, rev: sync.rev || 0, last: sync.last || 0, status: 'ok' }); syncNow(); } catch {} }
-  else if (!S.settings.onboarded && !S.tx.length) showWelcome();
+  else if (!S.settings.onboarded) showWelcome();
 }
 
 function renderProfiles() {
@@ -1602,7 +1602,7 @@ function migrateCats(cats) {
     } else renderPicker();
   }
   updatePersistInfo();
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
 })();
 </script>
 </body>
