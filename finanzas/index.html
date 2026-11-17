@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Mis Finanzas</title>
 <meta name="description" content="Organiza tus finanzas. Datos solo en tu dispositivo.">
 <meta name="theme-color" content="#f2efe9">
@@ -218,6 +218,32 @@
   .stackbar{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px;margin-bottom:10px}
   .footnote{margin:22px 0 4px 4px}
   svg text{font-family:var(--font),sans-serif}
+
+  /* ===== Fluidez táctil ===== */
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior-y:none}
+  input,textarea,.codebox{-webkit-user-select:text;user-select:text}
+  button,[data-id],[data-m],[data-go]{touch-action:manipulation;cursor:pointer}
+  /* iOS acerca la pantalla si un campo tiene menos de 16 px: todos quedan en 16 px o más */
+  input,select,textarea{font-size:16px!important}
+  .amount-wrap input{font-size:44px!important}
+  .codein{font-size:17px!important}
+  /* Respuesta inmediata al tocar */
+  .btn,.fab,.iconbtn,.avatar,nav.tabs button,.side-nav button,.side-add,.seg button,.mstrip button,.cgrid button,.igrid button,
+  .pgrid button,.fontopt button,.link,.list .item,.tl .tx,.ccard,.mhead .arrows button{transition:transform .14s cubic-bezier(.2,.8,.2,1),background-color .15s,opacity .15s}
+  .btn:active,.iconbtn:active,.avatar:active,.seg button:active,.mstrip button:active,.cgrid button:active,.igrid button:active,
+  .pgrid button:active,.fontopt button:active,.mhead .arrows button:active,.side-add:active{transform:scale(.96)}
+  .fab:active{transform:scale(.92)}
+  nav.tabs button:active,.side-nav button:active{transform:scale(.9)}
+  .list .item:active,.tl .tx:active,.ccard:active{transform:scale(.985);opacity:.85}
+  .link:active{opacity:.6}
+  /* Cambio de sección suave */
+  main > section:not(.hidden){animation:viewIn .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hscroll,.mstrip{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  dialog::backdrop{animation:fadeBg .2s ease-out}
+  @keyframes fadeBg{from{opacity:0}}
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after,dialog::backdrop{animation:none!important;transition:none!important}}
   .side,.tab-only,.movs-side{display:none}
   #lock{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;align-items:center;justify-content:center;
     padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));overflow-y:auto}
@@ -456,7 +482,7 @@
       <button class="btn dark block hidden" id="installBtn">Instalar en este dispositivo</button>
       <p class="muted" id="installHint" style="margin:8px 0 0;font-size:13px"></p>
     </div>
-    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7.1 · funciona sin conexión</p>
+    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7.2 · funciona sin conexión</p>
   </section>
 </main>
 
