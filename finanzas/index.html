@@ -184,7 +184,9 @@
   nav.tabs button{border:0;background:none;width:54px;height:46px;border-radius:99px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted)}
   nav.tabs button::after{content:"";width:18px;height:2.5px;border-radius:2px;background:transparent}
   nav.tabs button.active{color:var(--ink)}
-  nav.tabs button.active::after{background:var(--ink)}
+  nav.tabs button.active::after{background:transparent}
+  nav.tabs{position:relative}
+  .tab-ind{position:absolute;left:0;bottom:9px;width:18px;height:2.5px;border-radius:2px;background:var(--ink);transition:transform .38s cubic-bezier(.34,1.4,.64,1);pointer-events:none}
   .fab{pointer-events:auto;width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 10px 26px rgba(0,0,0,.28)}
 
   /* Hoja inferior */
@@ -238,8 +240,57 @@
   .list .item:active,.tl .tx:active,.ccard:active{transform:scale(.985);opacity:.85}
   .link:active{opacity:.6}
   /* Cambio de sección suave */
-  main > section:not(.hidden){animation:viewIn .22s cubic-bezier(.2,.8,.2,1)}
-  @keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* ===== Animaciones ===== */
+  :root{--spring:cubic-bezier(.34,1.56,.64,1);--out:cubic-bezier(.2,.8,.2,1)}
+  /* Botones: se hunden rápido y regresan con rebote */
+  .btn,.fab,.iconbtn,.avatar,.seg button,.mstrip button,.cgrid button,.igrid button,.pgrid button,.fontopt button,.mhead .arrows button,.side-add,
+  nav.tabs button,.side-nav button,.list .item,.tl .tx,.ccard{transition:transform .42s var(--spring),background-color .2s,color .2s,opacity .2s,box-shadow .2s!important}
+  .btn:active,.fab:active,.iconbtn:active,.avatar:active,.seg button:active,.mstrip button:active,.cgrid button:active,.igrid button:active,.pgrid button:active,
+  .fontopt button:active,.mhead .arrows button:active,.side-add:active,nav.tabs button:active,.side-nav button:active,.list .item:active,.tl .tx:active,.ccard:active{transition-duration:.08s!important}
+  .seg button.on,.cgrid button.sel .c,.igrid button.sel,.mstrip button.on{animation:pop .38s var(--spring)}
+  .cgrid button .c{transition:background-color .2s,color .2s,border-color .2s,transform .35s var(--spring)}
+  .cgrid button.sel .c{transform:scale(1.06)}
+  nav.tabs button.active svg,.side-nav button.active svg{animation:hop .45s var(--spring)}
+  @keyframes pop{0%{transform:scale(.88)}100%{transform:scale(1)}}
+  @keyframes hop{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-4px) scale(1.12)}100%{transform:none}}
+  .fab svg{transition:transform .45s var(--spring)}
+  .fab.open svg{transform:rotate(135deg)}
+  /* Cambio de página: entra desde el lado de la pestaña elegida */
+  main > section.enter-r{animation:inR .34s var(--out)}
+  main > section.enter-l{animation:inL .34s var(--out)}
+  main > section.enter-u{animation:inU .3s var(--out)}
+  @keyframes inR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes inL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+  @keyframes inU{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .enter-r .stg,.enter-l .stg,.enter-u .stg{animation:rise .5s var(--out) both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  /* Barras que se llenan y movimiento nuevo */
+  .pbar i,.track i,.stackbar i{animation:grow .8s var(--out) both;transform-origin:left}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .is-new{animation:newItem 1.6s var(--out)}
+  @keyframes newItem{0%{opacity:0;transform:translateY(-10px) scale(.97);background:var(--sage)}25%{opacity:1;transform:none;background:var(--sage)}100%{background:transparent}}
+  .tl .tx.is-new{animation:newTx 1.6s var(--out)}
+  @keyframes newTx{0%{opacity:0;transform:translateY(-10px) scale(.97);box-shadow:0 0 0 3px var(--sage-2)}30%{opacity:1;transform:none;box-shadow:0 0 0 3px var(--sage-2)}100%{box-shadow:var(--shadow)}}
+  /* Hoja: sale hacia abajo al guardar o cerrar */
+  .sheet{animation:up .42s var(--spring)}
+  .sheet.closing{animation:down .22s cubic-bezier(.4,0,1,1) forwards}
+  @keyframes down{to{transform:translateY(110%);opacity:.6}}
+  @media (min-width:768px){ .sheet{animation:zoomIn .32s var(--spring)} .sheet.closing{animation:zoomOut .18s ease-in forwards}
+    @keyframes zoomIn{from{opacity:0;transform:scale(.94)}} @keyframes zoomOut{to{opacity:0;transform:scale(.96)}} }
+  /* Confirmación de movimiento guardado */
+  #burst{position:fixed;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none}
+  #burst .bx{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:22px 30px 18px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.18);
+    animation:burstIn .45s var(--spring) both}
+  #burst.out .bx{animation:burstOut .28s ease-in forwards}
+  @keyframes burstIn{from{opacity:0;transform:scale(.7)}}
+  @keyframes burstOut{to{opacity:0;transform:scale(.9) translateY(8px)}}
+  #burst svg circle{stroke-dasharray:157;stroke-dashoffset:157;animation:draw .5s .05s var(--out) forwards}
+  #burst svg path{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .35s .42s var(--out) forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  #burst b{display:block;font-size:24px;font-weight:800;margin-top:10px;letter-spacing:-.02em;animation:rise .4s .3s var(--out) both}
+  #burst small{display:block;color:var(--muted);font-size:13px;margin-top:2px;animation:rise .4s .38s var(--out) both}
+  .heroflash{animation:heroflash .7s var(--out)}
+  @keyframes heroflash{40%{transform:scale(1.04)}}
   .hscroll,.mstrip{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   dialog::backdrop{animation:fadeBg .2s ease-out}
   @keyframes fadeBg{from{opacity:0}}
@@ -363,7 +414,7 @@
     <div class="mstrip" data-mstrip></div>
 
     <div class="home-grid">
-    <div class="g-hero"><div class="hero">
+    <div class="stg g-hero"><div class="hero">
       <svg class="waves" viewBox="0 0 400 220" preserveAspectRatio="none" aria-hidden="true" id="waves"></svg>
       <small id="heroLbl"></small>
       <div class="big" id="heroBal"></div>
@@ -375,16 +426,16 @@
       <div class="foot"><span id="heroFootL"></span><span id="heroFootR"></span></div>
     </div></div>
 
-    <div class="g-cats"><div class="sec"><h2>Categorías</h2><button class="link" data-go="pres">Ver todo <span data-ic="chevron-right" data-s="15"></span></button></div>
+    <div class="stg g-cats"><div class="sec"><h2>Categorías</h2><button class="link" data-go="pres">Ver todo <span data-ic="chevron-right" data-s="15"></span></button></div>
     <div class="hscroll" id="catCards"></div></div>
 
-    <div class="g-recent"><div class="sec"><h2>Movimientos recientes</h2><button class="link" data-go="movs" id="recentCount"></button></div>
+    <div class="stg g-recent"><div class="sec"><h2>Movimientos recientes</h2><button class="link" data-go="movs" id="recentCount"></button></div>
     <div class="list" id="recent"></div></div>
 
-    <div class="g-trend"><div class="sec"><h2>Tendencia</h2><span class="muted" style="font-size:13px">6 meses</span></div>
+    <div class="stg g-trend"><div class="sec"><h2>Tendencia</h2><span class="muted" style="font-size:13px">6 meses</span></div>
     <div class="card"><div id="bars"></div></div></div>
 
-    <div class="g-dist"><div class="sec tab-only"><h2>En qué se va</h2></div><div class="card">
+    <div class="stg g-dist"><div class="sec tab-only"><h2>En qué se va</h2></div><div class="card">
       <h3>Distribución de gastos</h3>
       <div id="dist"></div>
     </div>
@@ -482,7 +533,7 @@
       <button class="btn dark block hidden" id="installBtn">Instalar en este dispositivo</button>
       <p class="muted" id="installHint" style="margin:8px 0 0;font-size:13px"></p>
     </div>
-    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7.2 · funciona sin conexión</p>
+    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0">Mis Finanzas v7.3 · funciona sin conexión</p>
   </section>
 </main>
 
@@ -499,7 +550,7 @@
 </aside>
 
 <div class="navwrap"><div class="navin">
-  <nav class="tabs">
+  <nav class="tabs"><span class="tab-ind" id="tabInd"></span>
     <button data-view="inicio" class="active" aria-label="Inicio"><span data-ic="house" data-s="21"></span></button>
     <button data-view="movs" aria-label="Movimientos"><span data-ic="list-ordered" data-s="21"></span></button>
     <button data-view="pres" aria-label="Presupuestos"><span data-ic="target" data-s="21"></span></button>
@@ -572,6 +623,7 @@
 
 <div id="lock" class="hidden"><div class="lk" id="lkBody"></div></div>
 <div class="toast" id="toast"></div>
+<div id="burst" class="hidden"></div>
 
 <script>
 'use strict';
@@ -605,7 +657,7 @@ function confirmDlg(title, msg, yesText = 'Confirmar') {
   });
 }
 // Cierra hojas al tocar el fondo
-$$('dialog').forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) { d.close(); if (d.id === 'cfDlg') $('#cfNo').click(); } }));
+$$('dialog').forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) { closeSheet(d); if (d.id === 'cfDlg') $('#cfNo').click(); } }));
 
 function parseAmount(str) {
   const clean = String(str).trim().replace(/\s/g, '').replace(/,(?=\d{1,2}$)/, '.').replace(/,/g, '');
@@ -728,9 +780,9 @@ function renderInicio() {
 
   const list = txOfMonth(curMonth); const t = totals(list);
   $('#heroLbl').textContent = 'Balance de ' + monthName(curMonth, 'month').toLowerCase();
-  $('#heroBal').textContent = money(t.bal);
-  $('#heroIn').textContent = money(t.inc);
-  $('#heroOut').textContent = money(t.out);
+  countTo($('#heroBal'), t.bal);
+  countTo($('#heroIn'), t.inc);
+  countTo($('#heroOut'), t.out);
   const spent = spentByCat(list);
   const budIds = Object.keys(S.budgets).filter((id) => S.cats.some((c) => c.id === id));
   const budTot = budIds.reduce((a, id) => a + S.budgets[id], 0);
@@ -900,14 +952,18 @@ function openTx(id = null) {
   $('#txNote').value = t ? t.note : '';
   $('#txDelete').classList.toggle('hidden', !t);
   renderFormCats(); fitAmount();
-  $('#txDlg').showModal();
+  const dlg = $('#txDlg');
+  if (dlg._closeT) { clearTimeout(dlg._closeT); dlg._closeT = null; dlg.querySelector('.sheet').classList.remove('closing'); }
+  if (!dlg.open) dlg.showModal();
+  $('#fab').classList.add('open');
   if (!t) setTimeout(() => $('#txAmount').focus(), 60);
 }
 $('#txType').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; formType = b.dataset.v; formCat = null; renderFormCats(); });
 $('#txCats').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; formCat = b.dataset.cat; renderFormCats(); });
 const fitAmount = () => { const el = $('#txAmount'); el.style.width = Math.max(4.2, (el.value || el.placeholder).length + 0.6) + 'ch'; };
 $('#txAmount').addEventListener('input', fitAmount);
-$('#txClose').onclick = () => $('#txDlg').close();
+$('#txClose').onclick = () => closeSheet($('#txDlg'));
+$('#txDlg').addEventListener('close', () => $('#fab').classList.remove('open'));
 $('#txForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const amount = parseAmount($('#txAmount').value);
@@ -915,16 +971,19 @@ $('#txForm').addEventListener('submit', async (e) => {
   if (!formCat) { toast('Elige una categoría'); return; }
   const date = $('#txDate').value; if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('Fecha inválida'); return; }
   const data = { type: formType, amount, cat: formCat, date, note: $('#txNote').value.trim() };
+  let id = editing;
   if (editing) Object.assign(S.tx.find((x) => x.id === editing), data, { updated: now() });
-  else S.tx.push({ id: uid(), created: now(), updated: now(), ...data });
+  else { id = uid(); S.tx.push({ id, created: now(), updated: now(), ...data }); }
   await save('tx');
-  $('#txDlg').close();
+  await closeSheet($('#txDlg'));
   curMonth = monthKey(date);
-  toast(editing ? 'Movimiento actualizado' : 'Movimiento guardado');
-  requestPersist(); render();
+  const c = catById(formCat);
+  burst(`${data.type === 'in' ? '+' : '−'}${money(amount)}`, editing ? 'Movimiento actualizado' : `${c.name} · guardado`);
+  requestPersist(); render(); highlightNew(id);
+  const hb = $('.hero'); if (hb && view === 'inicio') { hb.classList.remove('heroflash'); void hb.offsetWidth; hb.classList.add('heroflash'); }
 });
 $('#txDelete').onclick = async () => {
-  $('#txDlg').close();
+  await closeSheet($('#txDlg'));
   if (!(await confirmDlg('Eliminar movimiento', 'Esta acción no se puede deshacer.', 'Eliminar'))) return;
   S.tx = S.tx.filter((x) => x.id !== editing); S.dead[editing] = now();
   await Promise.all([save('tx'), save('dead')]); toast('Eliminado'); render();
@@ -954,11 +1013,67 @@ $('#catList').addEventListener('click', async (e) => {
 });
 
 /* ================= Eventos generales ================= */
+const VIEWS = ['inicio', 'movs', 'pres', 'ajustes'];
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function moveTabInd() {
+  const b = document.querySelector('nav.tabs button.active'), ind = $('#tabInd');
+  if (b && ind) ind.style.transform = `translateX(${b.offsetLeft + b.offsetWidth / 2 - 9}px)`;
+}
 function go(v) {
+  const dir = VIEWS.indexOf(v) - VIEWS.indexOf(view);
   view = v;
   $$('button[data-view]').forEach((x) => x.classList.toggle('active', x.dataset.view === v));
-  $$('main > section').forEach((s) => s.classList.toggle('hidden', s.id !== 'v-' + v));
+  $$('main > section').forEach((s) => {
+    const on = s.id === 'v-' + v;
+    s.classList.toggle('hidden', !on);
+    s.classList.remove('enter-r', 'enter-l', 'enter-u');
+    if (on) { void s.offsetWidth; s.classList.add(dir > 0 ? 'enter-r' : dir < 0 ? 'enter-l' : 'enter-u'); }
+  });
+  // escalonado de bloques en la sección que entra
+  $$('#v-' + v + ' .stg').forEach((el, i) => (el.style.animationDelay = 60 + i * 55 + 'ms'));
+  moveTabInd();
   window.scrollTo(0, 0); render();
+}
+window.addEventListener('resize', moveTabInd);
+
+// Números que cuentan hasta su valor
+function countTo(el, cents) {
+  const from = el.dataset.v != null ? +el.dataset.v : null;
+  el.dataset.v = cents;
+  if (from === null || from === cents || reduceMotion()) { el.textContent = money(cents); return; }
+  const t0 = performance.now(), dur = 650;
+  cancelAnimationFrame(el._raf);
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = money(Math.round(from + (cents - from) * e));
+    if (k < 1) el._raf = requestAnimationFrame(step);
+  };
+  el._raf = requestAnimationFrame(step);
+}
+// Cierra una hoja con animación
+function closeSheet(dlg) {
+  return new Promise((res) => {
+    const sh = dlg.querySelector('.sheet');
+    $('#fab').classList.remove('open');
+    if (!sh || reduceMotion() || !dlg.open) { dlg.close(); return res(); }
+    sh.classList.add('closing');
+    clearTimeout(dlg._closeT);
+    dlg._closeT = setTimeout(() => { dlg._closeT = null; dlg.close(); sh.classList.remove('closing'); res(); }, 210);
+  });
+}
+// Palomita animada al guardar
+function burst(title, sub) {
+  const b = $('#burst');
+  b.innerHTML = `<div class="bx"><svg width="58" height="58" viewBox="0 0 58 58" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="29" cy="29" r="25" stroke="var(--green)" stroke-width="3"/><path d="M18 30l8 8 15-17" stroke="var(--ink)" stroke-width="3.5"/></svg>
+    <b>${esc(title)}</b><small>${esc(sub)}</small></div>`;
+  b.classList.remove('hidden', 'out');
+  clearTimeout(burst._t1); clearTimeout(burst._t2);
+  burst._t1 = setTimeout(() => b.classList.add('out'), 1050);
+  burst._t2 = setTimeout(() => b.classList.add('hidden'), 1350);
+}
+function highlightNew(id) {
+  requestAnimationFrame(() => $$(`[data-id="${id}"]`).forEach((el) => { el.classList.remove('is-new'); void el.offsetWidth; el.classList.add('is-new'); }));
 }
 $$('button[data-view]').forEach((b) => b.addEventListener('click', () => go(b.dataset.view)));
 $$('[data-add]').forEach((b) => b.addEventListener('click', () => openTx()));
